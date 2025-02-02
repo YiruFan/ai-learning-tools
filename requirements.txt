@@ -1,0 +1,11 @@
+flask
+opencv-python
+google-cloud-vision
+google-cloud-speech
+google-cloud-videointelligence
+google-generativeai
+pytesseract
+pdf2image
+PyPDF2
+Werkzeug
+numpy 

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .container {
+            max-width: 1000px;
+            padding: 20px;
+        }
+        .card {
+            margin-bottom: 30px;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 20px 20px 0 0 !important;
+        }
+        .card-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .result-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #4481eb, #04befe);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #04befe, #4481eb);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(68, 129, 235, 0.4);
+        }
+        .form-control {
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(68, 129, 235, 0.25);
+        }
+        .loading-spinner {
+            display: none;
+            padding: 20px;
+            text-align: center;
+            color: #4481eb;
+        }
+        .mind-map {
+            padding: 25px;
+            background: #fff;
+            border-radius: 15px;
+        }
+        .central-topic {
+            text-align: center;
+            font-size: 1.6em;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            border-radius: 12px;
+            color: #006064;
+        }
+        .mind-map-branches {
+            list-style: none;
+            padding: 0;
+        }
+        .branch {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #4481eb;
+        }
+        .branch:hover {
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .branch-topic {
+            font-weight: 600;
+            color: #1565c0;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+        .sub-points {
+            list-style: none;
+            padding-left: 20px;
+        }
+        .point {
+            margin: 8px 0;
+            padding: 8px 15px;
+            background: #fff;
+            border-radius: 8px;
+            font-size: 0.95em;
+            border-left: 3px solid #b3e5fc;
+        }
+        .suggestions-list {
+            list-style: none;
+            padding: 0;
+        }
+        .suggestion-item {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4caf50;
+            transition: all 0.3s ease;
+        }
+        .suggestion-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h4 {
+            color: #2c3e50;
+            margin: 25px 0 15px;
+            font-weight: 600;
+        }
+        #aiSummary, #videoSummary {
+            line-height: 1.6;
+            color: #37474f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- File Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📝 Upload Learning Materials</h3>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" class="mb-3">
+                    <div class="mb-3">
+                        <input type="file" class="form-control" id="fileInput" 
+                               accept="image/*,.pdf">
+                        <small class="text-muted">Supported formats: PNG, JPG, JPEG, PDF</small>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="uploadFile()">
+                        Generate Mind Map
+                    </button>
+                </form>
+                
+                <div class="loading-spinner" id="uploadLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <span class="ms-2">Generating mind map...</span>
+                </div>
+
+                <div class="result-section">
+                    <!-- Summary Section -->
+                    <h4>AI Summary:</h4>
+                    <div id="aiSummary" class="bg-light p-3 rounded mb-4">
+                        No summary generated yet
+                    </div>
+                    
+                    <!-- Mind Map Section -->
+                    <h4>Mind Map:</h4>
+                    <div id="mindMap" class="mind-map bg-light p-3 rounded mb-4">
+                        <!-- Mind map will be rendered here -->
+                    </div>
+
+                    <!-- Learning Suggestions -->
+                    <h4>Learning Suggestions:</h4>
+                    <div id="learningSuggestions" class="bg-light p-3 rounded">
+                        <ul id="suggestionsList" class="next-topics">
+                            No suggestions yet
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Analysis Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📺 Video Analysis</h3>
+            </div>
+            <div class="card-body">
+                <form id="videoForm" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="videoUrl" 
+                               placeholder="Enter YouTube video URL">
+                        <button type="button" class="btn btn-primary" onclick="summarizeVideo()">
+                            Analyze Video
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="loading-spinner" id="videoLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <span class="ms-2">Processing video content...</span>
+                </div>
+
+                <div class="result-section">
+                    <h4>Video Content Summary:</h4>
+                    <pre id="videoSummary" class="bg-light p-3 rounded">No summary generated yet</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+    function getNextTopics() {
+        let extractedText = document.getElementById("extractedText").textContent;
+
+        // ✅ Debugging: Check if extracted text is available
+        if (!extractedText || extractedText.trim() === "") {
+            console.error("No extracted text found!");
+            alert("No extracted text available. Upload notes first.");
+            return;
+        }
+
+        fetch("/next_link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ extracted_text: extractedText }) // ✅ Send JSON data
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server Error: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            let topicsList = document.getElementById("nextTopicsList");
+            topicsList.innerHTML = ""; // ✅ Clear previous topics
+
+            if (data.topics && data.topics.length > 0) {
+                data.topics.forEach(topic => {
+                    let listItem = document.createElement("li");
+                    listItem.innerHTML = `<strong>${topic.name}</strong>: ${topic.reason} 
+                    <br><a href="${topic.link}" target="_blank">Learn More</a>`;
+                    topicsList.appendChild(listItem);
+                });
+            } else {
+                topicsList.innerHTML = "<li>No topics generated.</li>";
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching topics:", error);
+            alert("Failed to fetch suggested topics. Check console for details.");
+        });
+    }
+        function uploadFile() {
+            let fileInput = document.getElementById("fileInput").files[0];
+            if (!fileInput) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", fileInput);
+
+            document.getElementById("uploadLoading").style.display = "block";
+            
+            fetch("/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("uploadLoading").style.display = "none";
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                // Update all three sections
+                document.getElementById("aiSummary").textContent = data.summary || "No summary generated.";
+                document.getElementById("mindMap").innerHTML = formatMindMap(data.mind_map);
+                updateSuggestions(data.suggestions);
+            })
+            .catch(error => {
+                document.getElementById("uploadLoading").style.display = "none";
+                console.error("Error:", error);
+                alert("Failed to process file. Please try again.");
+            });
+        }
+
+        function updateSuggestions(suggestions) {
+            let suggestionsList = document.getElementById("suggestionsList");
+            suggestionsList.innerHTML = "";
+            
+            if (suggestions && suggestions.topics) {
+                suggestions.topics.forEach(topic => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `
+                        <strong>${topic.name}</strong>
+                        <p>${topic.reason}</p>
+                        <a href="${topic.link}" target="_blank" class="btn btn-sm btn-primary">Learn More</a>
+                    `;
+                    suggestionsList.appendChild(li);
+                });
+            } else {
+                suggestionsList.innerHTML = "<li>No learning suggestions available.</li>";
+            }
+        }
+
+        function formatMindMap(mindMapData) {
+            // 将AI生成的思维导图数据转换为HTML
+            if (!mindMapData) return "No mind map generated.";
+            
+            let html = `<div class="central-topic">${mindMapData.central_topic}</div>`;
+            
+            if (mindMapData.branches) {
+                html += '<ul class="mind-map-branches">';
+                mindMapData.branches.forEach(branch => {
+                    html += `
+                        <li class="branch">
+                            <div class="branch-topic">${branch.topic}</div>
+                            ${branch.points ? `
+                                <ul class="sub-points">
+                                    ${branch.points.map(point => 
+                                        `<li class="point">${point}</li>`
+                                    ).join('')}
+                                </ul>
+                            ` : ''}
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+            }
+            
+            return html;
+        }
+
+        function summarizeVideo() {
+            let videoUrl = document.getElementById("videoUrl").value.trim();
+            if (!videoUrl) {
+                alert("Please enter a valid YouTube video URL.");
+                return;
+            }
+
+            document.getElementById("videoLoading").style.display = "block";
+
+            fetch("/summarize_video", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ video_url: videoUrl })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("videoLoading").style.display = "none";
+                document.getElementById("videoSummary").textContent = 
+                    "📌 Topics: " + (data.topics ? data.topics.join(", ") : "No topics found.") + 
+                    "\n📖 Summary: " + (data.ai_summary || "AI could not generate a summary.");
+            })
+            .catch(error => {
+                document.getElementById("videoLoading").style.display = "none";
+                console.error("Error:", error);
+                alert("Failed to process video. Please check the URL and try again.");
+            });
+        }
+
+    </script>
+</body>
+</html>
